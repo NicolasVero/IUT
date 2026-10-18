@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TP 1</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <form id="pokemon-form">
+      <label for="name">
+        Nom
+        <input type="text" name="name" id="name" />
+      </label>
+
+      <label for="image_url">
+        URL de l'image
+        <input type="text" name="image_url" id="image_url" />
+      </label>
+
+      <label for="hp">
+        Points de Vie (HP)
+        <input type="number" name="hp" id="hp" />
+      </label>
+
+      <label for="attack">
+        Attaque
+        <input type="number" name="attack" id="attack" />
+      </label>
+
+      <label for="type">
+        Type
+        <select name="type" id="type">
+          <option value="feu">Feu</option>
+          <option value="eau">Eau</option>
+          <option value="plante">Plante</option>
+        </select>
+      </label>
+
+      <button type="submit">Ajouter</button>
+    </form>
+
+    <ul id="pokemon-list"></ul>
+  </body>
+</html>

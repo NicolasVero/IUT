@@ -1,0 +1,116 @@
+@baseUrl = http://localhost:3000/api
+
+### Check that the server responds
+GET {{baseUrl}}/health
+
+### API information
+GET {{baseUrl}}/about
+
+### List the Pokémon
+GET {{baseUrl}}/pokemons
+
+### Get an existing Pokémon
+GET {{baseUrl}}/pokemons/25
+
+### Get a Pokémon that does not exist
+GET {{baseUrl}}/pokemons/999
+
+### Get with an invalid id
+GET {{baseUrl}}/pokemons/abc
+
+### Create a Pokémon
+POST {{baseUrl}}/pokemons
+Content-Type: application/json
+
+{
+  "id": 7,
+  "name": "squirtle",
+  "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png",
+  "primaryType": "water",
+  "secondaryType": null,
+  "hp": 44, "attack": 48, "defense": 65,
+  "specialAttack": 50, "specialDefense": 64, "speed": 43
+}
+
+### Create an invalid Pokémon: empty name, hp is not a number
+POST {{baseUrl}}/pokemons
+Content-Type: application/json
+
+{
+  "id": 19,
+  "name": "",
+  "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/19.png",
+  "primaryType": "normal",
+  "secondaryType": null,
+  "hp": "abc", "attack": 56, "defense": 35,
+  "specialAttack": 25, "specialDefense": 35, "speed": 72
+}
+
+### Create an invalid Pokémon: missing name
+POST {{baseUrl}}/pokemons
+Content-Type: application/json
+
+{
+  "id": 19,
+  "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/19.png",
+  "primaryType": "normal",
+  "secondaryType": null,
+  "hp": 30, "attack": 56, "defense": 35,
+  "specialAttack": 25, "specialDefense": 35, "speed": 72
+}
+
+### Create an invalid Pokémon: negative hp
+POST {{baseUrl}}/pokemons
+Content-Type: application/json
+
+{
+  "id": 19,
+  "name": "rattata",
+  "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/19.png",
+  "primaryType": "normal",
+  "secondaryType": null,
+  "hp": -3, "attack": 56, "defense": 35,
+  "specialAttack": 25, "specialDefense": 35, "speed": 72
+}
+
+### Update a Pokémon
+PUT {{baseUrl}}/pokemons/7
+Content-Type: application/json
+
+{
+  "name": "squirtle",
+  "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/7.png",
+  "primaryType": "water",
+  "secondaryType": null,
+  "hp": 44, "attack": 48, "defense": 65,
+  "specialAttack": 50, "specialDefense": 64, "speed": 43
+}
+
+### Update a Pokémon that does not exist
+PUT {{baseUrl}}/pokemons/999
+Content-Type: application/json
+
+{
+  "name": "squirtle",
+  "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png",
+  "primaryType": "water",
+  "secondaryType": null,
+  "hp": 44, "attack": 48, "defense": 65,
+  "specialAttack": 50, "specialDefense": 64, "speed": 43
+}
+
+### Update a Pokémon with an invalid body: empty name
+PUT {{baseUrl}}/pokemons/7
+Content-Type: application/json
+
+{
+  "name": "",
+  "sprite": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png",
+  "primaryType": "water",
+  "secondaryType": null,
+  "hp": 44, "attack": 48, "defense": 65,
+  "specialAttack": 50, "specialDefense": 64, "speed": 43
+}
+
+### Delete a Pokémon
+DELETE {{baseUrl}}/pokemons/7

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pokédex</title>
+  </head>
+  <body>
+    <main>
+      <h1>Pokédex</h1>
+      <p id="message" role="status"></p>
+
+      <form id="pokemon-form" novalidate>
+        <h2 id="form-title">Add a Pokémon</h2>
+
+        <div class="fields">
+          <label>Id <input name="id" type="number" /></label>
+          <label>Name <input name="name" /></label>
+          <label class="wide">Sprite URL <input name="sprite" type="url" /></label>
+          <label>
+            Primary type
+            <select name="primaryType">
+              <option value="normal" selected>Normal</option>
+              <option value="fire">Fire</option>
+              <option value="water">Water</option>
+              <option value="electric">Electric</option>
+              <option value="grass">Grass</option>
+              <option value="ice">Ice</option>
+              <option value="fighting">Fighting</option>
+              <option value="poison">Poison</option>
+              <option value="ground">Ground</option>
+              <option value="flying">Flying</option>
+              <option value="psychic">Psychic</option>
+              <option value="bug">Bug</option>
+              <option value="rock">Rock</option>
+              <option value="ghost">Ghost</option>
+              <option value="dragon">Dragon</option>
+              <option value="dark">Dark</option>
+              <option value="steel">Steel</option>
+              <option value="fairy">Fairy</option>
+            </select>
+          </label>
+          <label>
+            Secondary type
+            <select name="secondaryType">
+              <option value="">None</option>
+              <option value="normal">Normal</option>
+              <option value="fire">Fire</option>
+              <option value="water">Water</option>
+              <option value="electric">Electric</option>
+              <option value="grass">Grass</option>
+              <option value="ice">Ice</option>
+              <option value="fighting">Fighting</option>
+              <option value="poison">Poison</option>
+              <option value="ground">Ground</option>
+              <option value="flying">Flying</option>
+              <option value="psychic">Psychic</option>
+              <option value="bug">Bug</option>
+              <option value="rock">Rock</option>
+              <option value="ghost">Ghost</option>
+              <option value="dragon">Dragon</option>
+              <option value="dark">Dark</option>
+              <option value="steel">Steel</option>
+              <option value="fairy">Fairy</option>
+            </select>
+          </label>
+          <label>HP <input name="hp" type="number" /></label>
+          <label>Attack <input name="attack" type="number" /></label>
+          <label>Defense <input name="defense" type="number" /></label>
+          <label>Sp. attack <input name="specialAttack" type="number" /></label>
+          <label>Sp. defense <input name="specialDefense" type="number" /></label>
+          <label>Speed <input name="speed" type="number" /></label>
+        </div>
+
+        <div class="actions">
+          <button type="submit" id="submit-button">Add</button>
+          <button type="button" id="cancel-button" hidden>Cancel</button>
+        </div>
+      </form>
+
+      <h2>My Pokémon</h2>
+      <ul id="pokemon-list"></ul>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

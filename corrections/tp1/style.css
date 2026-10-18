@@ -1,0 +1,175 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap");
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-family: "Nunito", sans-serif;
+	background: #f5f5f5;
+	min-height: 100vh;
+	padding: 32px 20px;
+	color: #222;
+}
+
+h1 {
+	font-size: 1.6rem;
+	font-weight: 800;
+	text-align: center;
+	color: #cc0000;
+	margin-bottom: 28px;
+}
+
+h2 {
+	font-size: 1rem;
+	font-weight: 700;
+	color: #444;
+	margin: 28px 0 14px;
+}
+
+/* ── Formulaire ── */
+form {
+	background: #fff;
+	border-radius: 12px;
+	padding: 24px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px 20px;
+	max-width: 640px;
+	margin: 32px auto;
+}
+
+form label {
+	font-weight: 700;
+	font-size: 0.85rem;
+	color: #555;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
+form button[type="submit"] {
+	grid-column: 1 / -1;
+}
+
+input,
+select {
+	padding: 9px 12px;
+	border: 1.5px solid #ddd;
+	border-radius: 8px;
+	font-family: "Nunito", sans-serif;
+	font-size: 0.9rem;
+	background: #fafafa;
+	color: #222;
+	transition: border-color 0.15s;
+}
+
+input:focus,
+select:focus {
+	outline: none;
+	border-color: #cc0000;
+	background: #fff;
+}
+
+button[type="submit"] {
+	background: #cc0000;
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	padding: 11px 20px;
+	font-family: "Nunito", sans-serif;
+	font-size: 0.9rem;
+	font-weight: 700;
+	cursor: pointer;
+	transition: background 0.15s;
+}
+
+button[type="submit"]:hover {
+	background: #aa0000;
+}
+
+/* ── Liste ── */
+#pokemon-list {
+	list-style: none;
+	padding: 0;
+	max-width: 640px;
+	margin: 0 auto;
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 10px;
+}
+
+@media (min-width: 800px) {
+	#pokemon-list {
+		max-width: 1100px;
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (min-width: 1200px) {
+	#pokemon-list {
+		max-width: 1600px;
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+.pokemon-item {
+	background: #fff;
+	border-radius: 10px;
+	padding: 14px 16px;
+	box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+.pokemon-item img {
+	width: 64px;
+	height: 64px;
+	object-fit: contain;
+	flex-shrink: 0;
+}
+
+.pokemon-item strong {
+	font-size: 1rem;
+	font-weight: 800;
+}
+
+.pokemon-item button {
+	margin-left: auto;
+	padding: 6px 12px;
+	background: transparent;
+	border: 1.5px solid #cc0000;
+	color: #cc0000;
+	border-radius: 6px;
+	font-family: "Nunito", sans-serif;
+	font-weight: 700;
+	font-size: 0.8rem;
+	cursor: pointer;
+	flex-shrink: 0;
+	transition:
+			background 0.15s,
+			color 0.15s;
+}
+
+.pokemon-item button:hover {
+	background: #cc0000;
+	color: #fff;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+	form {
+		grid-template-columns: 1fr;
+	}
+
+	form label:last-of-type,
+	form button[type="submit"] {
+		grid-column: 1;
+	}
+}

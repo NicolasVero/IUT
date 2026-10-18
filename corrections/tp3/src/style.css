@@ -1,0 +1,366 @@
+:root {
+  color-scheme: light dark;
+  --text: #18181b;
+  --muted: #71717a;
+  --bg: #f4f4f5;
+  --surface: #fff;
+  --surface-muted: #f4f4f5;
+  --border: #e4e4e7;
+  --accent: #ef4444;
+  --accent-hover: #dc2626;
+  --success: #15803d;
+  --success-bg: #dcfce7;
+  --error: #b91c1c;
+  --error-bg: #fee2e2;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 12px rgb(0 0 0 / 0.06);
+  --shadow-hover: 0 2px 4px rgb(0 0 0 / 0.06), 0 12px 24px rgb(0 0 0 / 0.1);
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  font: 16px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #fafafa;
+    --muted: #a1a1aa;
+    --bg: #09090b;
+    --surface: #18181b;
+    --surface-muted: #27272a;
+    --border: #27272a;
+    --accent: #f87171;
+    --accent-hover: #ef4444;
+    --success: #86efac;
+    --success-bg: #14532d;
+    --error: #fca5a5;
+    --error-bg: #7f1d1d;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-hover: 0 8px 24px rgb(0 0 0 / 0.5);
+    --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+h1 {
+  margin: 0 0 16px;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  margin: 0 0 16px;
+  font-size: 1.25rem;
+}
+
+/* ---------- Message ---------- */
+
+#message {
+  margin: 0 0 16px;
+  border-radius: 8px;
+}
+
+#message.success,
+#message.error {
+  padding: 10px 14px;
+}
+
+#message.success {
+  color: var(--success);
+  background: var(--success-bg);
+}
+
+#message.error {
+  color: var(--error);
+  background: var(--error-bg);
+}
+
+/* ---------- Form ---------- */
+
+form {
+  padding: 24px;
+  margin-bottom: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.fields .wide {
+  grid-column: 1 / -1;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+input,
+select {
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+/* The native arrow cannot be moved: it is hidden and replaced by a chevron 12px from the edge */
+select {
+  appearance: none;
+  padding-right: 36px;
+  background: var(--surface) var(--chevron) no-repeat right 12px center / 16px;
+  cursor: pointer;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgb(239 68 68 / 0.2);
+}
+
+input:read-only {
+  color: var(--muted);
+  background: var(--surface-muted);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+button {
+  padding: 8px 18px;
+  font: inherit;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+
+button:hover {
+  background: var(--surface-muted);
+}
+
+button[type='submit'] {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+button[type='submit']:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- List ---------- */
+
+#pokemon-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.pokemon-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 44px 16px 16px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.pokemon-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.pokemon-card img {
+  width: 104px;
+  height: 104px;
+  padding: 4px;
+  background: var(--surface-muted);
+  border-radius: 50%;
+  image-rendering: pixelated;
+}
+
+/* The Poké Ball is smaller than a Pokémon sprite: same circle, more padding */
+.pokemon-card img.fallback {
+  padding: 32px;
+}
+
+.pokemon-card .number {
+  margin: 12px 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.pokemon-card h3 {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  text-transform: capitalize;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Edit / Remove icons ---------- */
+
+.card-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 4px;
+}
+
+.icon-button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+}
+
+/* The SVG is used as a mask: the icon takes the color of the text (currentColor) */
+.icon-button::before {
+  content: '';
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: auto;
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+
+.icon-edit {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z'/%3E%3C/svg%3E");
+}
+
+.icon-delete {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2'/%3E%3Cpath d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/%3E%3Cpath d='M10 11v6'/%3E%3Cpath d='M14 11v6'/%3E%3C/svg%3E");
+}
+
+.icon-button:hover {
+  color: var(--text);
+  background: var(--surface-muted);
+}
+
+.icon-delete:hover {
+  color: var(--error);
+  background: var(--error-bg);
+}
+
+/* ---------- Types ---------- */
+
+.types {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.type {
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  text-transform: capitalize;
+  background: #9ca3af;
+  border-radius: 999px;
+}
+
+.type[data-type='normal'] { background: #a8a77a; }
+.type[data-type='fire'] { background: #ee8130; }
+.type[data-type='water'] { background: #6390f0; }
+.type[data-type='electric'] { background: #e0b100; }
+.type[data-type='grass'] { background: #5fb33f; }
+.type[data-type='ice'] { background: #5ec5c0; }
+.type[data-type='fighting'] { background: #c22e28; }
+.type[data-type='poison'] { background: #a33ea1; }
+.type[data-type='ground'] { background: #c9a43f; }
+.type[data-type='flying'] { background: #8f7be6; }
+.type[data-type='psychic'] { background: #f95587; }
+.type[data-type='bug'] { background: #94a516; }
+.type[data-type='rock'] { background: #b6a136; }
+.type[data-type='ghost'] { background: #735797; }
+.type[data-type='dragon'] { background: #6f35fc; }
+.type[data-type='dark'] { background: #705746; }
+.type[data-type='steel'] { background: #9a9ab5; }
+.type[data-type='fairy'] { background: #d685ad; }
+
+/* ---------- Stats ---------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
+  margin: 16px 0 0;
+}
+
+.stats div {
+  padding: 6px 0;
+  background: var(--surface-muted);
+  border-radius: 8px;
+}
+
+.stats dt {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stats dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

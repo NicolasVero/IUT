@@ -85,7 +85,7 @@ form {
   grid-template-columns: 1fr 1fr;
   gap: 12px 20px;
   max-width: 640px;
-  margin: 0 auto;
+  margin: 32px auto;
 }
 
 form label {
