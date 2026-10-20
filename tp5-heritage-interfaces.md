@@ -350,7 +350,7 @@ skill.use(charmander, squirtle);
 ## Exercice 3 : Classe abstraite
 
 <details>
-<summary><strong>Cours : classes et méthodes abstraites</strong></summary>
+<summary><strong>Cours : classes abstraites et visibilité <code>protected</code></strong></summary>
 
 > ### Pourquoi `abstract` ?
 >
@@ -388,12 +388,42 @@ skill.use(charmander, squirtle);
 > ### Une classe abstraite reste un type
 >
 > On ne peut pas créer d'objet `Vehicle`, mais on peut toujours **typer** avec `Vehicle` : un paramètre `vehicle: Vehicle` ou un tableau `Vehicle[]` accepte n'importe quelle instance d'une sous-classe. Grâce au contrat abstrait, on peut appeler `travel()` sur n'importe quel `Vehicle` sans savoir de quelle sous-classe il s'agit : c'est encore du polymorphisme.
+>
+> ### `protected` : visible par les sous-classes
+>
+> Les membres `private` d'une classe sont inaccessibles dans ses sous-classes. C'est parfois trop strict : un attribut doit rester caché de l'extérieur, mais les sous-classes ont besoin de l'utiliser. C'est le rôle de `protected`.
+>
+> ```ts
+> abstract class Vehicle {
+>   protected mileage = 0; // kilométrage
+>   // ...
+> }
+>
+> class Car extends Vehicle {
+>   public override travel(distance: number): void {
+>     this.mileage += distance; // ✔ Car est une sous-classe de Vehicle
+>     console.log(`${this.name} drives ${distance} km.`);
+>   }
+> }
+>
+> const clio = new Car('Clio', 180, 5);
+> clio.mileage = 0; // ✘ impossible de trafiquer le compteur depuis l'extérieur
+> ```
+>
+> - À l'extérieur : `Property 'mileage' is protected and only accessible within class 'Vehicle' and its subclasses.`
+> - Si `mileage` était `private`, c'est la ligne de `Car` qui serait refusée : `Property 'mileage' is private and only accessible within class 'Vehicle'.`
+>
+> | | Dans la classe | Dans les sous-classes | À l'extérieur |
+> | --- | :---: | :---: | :---: |
+> | `public` | ✔ | ✔ | ✔ |
+> | `protected` | ✔ | ✔ | ✘ |
+> | `private` | ✔ | ✘ | ✘ |
 
 </details>
 
 ### Objectif
 
-Ajouter les capacités de soin, et réorganiser la famille des capacités autour d'une **classe abstraite**.
+Ajouter les capacités de soin, réorganiser la famille des capacités autour d'une **classe abstraite**, et découvrir la visibilité `protected`.
 
 ### Instructions
 
@@ -460,7 +490,14 @@ public chooseSkill(): Skill {
 
 Dans `duel`, remplacer les appels à `getStrongestSkill()` par `chooseSkill()`.
 
-6. Créer un fichier `src/HealSkill.ts` avec une classe `HealSkill` qui étend `Skill` :
+6. Dans `DamageSkill`, `power` est public : n'importe quel code peut le lire, alors que seules `DamageSkill` et ses sous-classes en ont besoin.
+    - Passer `power` en `private` (en gardant `readonly`). Relever les erreurs qui apparaissent dans `RecoilSkill` et `DrainSkill`.
+    - Remplacer `private` par `protected`. Les erreurs disparaissent.
+    - Dans `main.ts`, tenter d'afficher `takeDown.power`, relever l'erreur, puis supprimer cette ligne.
+
+   **Question** : quelle est la différence entre `private` et `protected` ?
+
+7. Créer un fichier `src/HealSkill.ts` avec une classe `HealSkill` qui étend `Skill` :
     - un attribut `amount` public en lecture seule : le nombre de PV rendus ;
     - un constructeur `public constructor(name: string, type: PokemonType, amount: number)`, qui vérifie que `amount` est strictement positif ;
     - `describe()`, qui retourne `Synthesis [grass] - Heal: 15` ;
@@ -472,9 +509,9 @@ Bulbasaur uses Synthesis! Bulbasaur recovers 15 HP (45/45).
 
 Le `_` devant `_target` indique à TypeScript que le paramètre est volontairement inutilisé (option `noUnusedParameters`) : une capacité de soin ne touche pas la cible, mais `use()` doit respecter la signature imposée par `Skill`.
 
-7. Retirer provisoirement `use()` de `HealSkill` et relever l'erreur.
+8. Retirer provisoirement `use()` de `HealSkill` et relever l'erreur.
 
-8. Apprendre `new HealSkill('Synthesis', 'grass', 15)` à `bulbasaur`. Mettre en commentaire les duels précédents de `main.ts`, soigner complètement `bulbasaur` et `charmander`, puis lancer `Pokemon.duel(bulbasaur, charmander)`. Les trois familles de capacités doivent apparaître :
+9. Apprendre `new HealSkill('Synthesis', 'grass', 15)` à `bulbasaur`. Mettre en commentaire les duels précédents de `main.ts`, soigner complètement `bulbasaur` et `charmander`, puis lancer `Pokemon.duel(bulbasaur, charmander)`. Les trois familles de capacités doivent apparaître :
 
 ```
 --- Round 1 ---
@@ -489,7 +526,7 @@ Charmander is hurt by recoil and loses 5 HP (20/39).
 Bulbasaur wins the battle!
 ```
 
-9. **Question** : plus aucun objet ne peut être créé avec `new Skill(...)`. Pourtant, `learnSkill(skill: Skill)`, `chooseSkill(): Skill` et l'attribut `_skills: Skill[]` compilent toujours. Pourquoi ?
+10. **Question** : plus aucun objet ne peut être créé avec `new Skill(...)`. Pourtant, `learnSkill(skill: Skill)`, `chooseSkill(): Skill` et l'attribut `_skills: Skill[]` compilent toujours. Pourquoi ?
 
 ---
 
@@ -674,24 +711,6 @@ duel(pikachu, punchingBag);
 > - Les **interfaces** permettent de faire coopérer des objets sans lien d'héritage : `journey` accepte une voiture et un cheval sans qu'ils aient de parent commun.
 >
 > D'où le conseil classique : *« préférer la composition à l'héritage »*. L'héritage n'est pas à proscrire, mais ce ne doit pas être le premier réflexe.
->
-> ### `Record`, `Partial` et `??`
->
-> ```ts
-> type Road = 'city' | 'road' | 'highway';
->
-> const SPEED_LIMITS: Record<Road, number> = { city: 50, road: 80, highway: 130 };
-> const TOLLS: Partial<Record<Road, number>> = { highway: 12 };
->
-> console.log(TOLLS.highway ?? 0); // 12
-> console.log(TOLLS.city ?? 0);    // 0 : pas de péage en ville
-> ```
->
-> - `Record<Road, number>` est le type d'un objet qui associe un `number` à **chaque** valeur de `Road`.
-> - `Partial<...>` rend toutes les clés facultatives : `TOLLS` ne liste que les routes à péage.
-> - Une clé absente vaut `undefined`. L'opérateur `??` retourne alors la valeur de droite.
->
-> Avec `Record<Road, ...>`, TypeScript **exige** une entrée pour chaque valeur : ajouter `'track'` à `Road` sans compléter `SPEED_LIMITS` provoque une erreur de compilation (`Property 'track' is missing in type ...`). Une table de données reste ainsi aussi sûre que des classes.
 
 </details>
 
@@ -706,22 +725,6 @@ Répondre par écrit, en quelques lignes, aux questions suivantes.
 1. On veut ajouter les faiblesses de types : les Pokémon Feu craignent l'eau, les Pokémon Eau craignent l'électricité… Un camarade propose de créer des sous-classes `FirePokemon`, `WaterPokemon`, `ElectricPokemon`…, chacune redéfinissant une méthode `getEffectiveness(skillType)` qui retourne le multiplicateur de dégâts. Comparer avec `RecoilSkill`, `DrainSkill` et `HealSkill` : qu'est-ce qui diffère d'une sous-classe à l'autre, du **code** ou des **valeurs** ?
 
 2. Les jeux comptent **18 types**. Combien de classes faudrait-il ? Et Charizard (Dracaufeu), qui est de type **Feu et Vol** : peut-on écrire `class FireFlyingPokemon extends FirePokemon, FlyingPokemon` ?
-
-3. Une alternative consiste à décrire les faiblesses comme une **donnée** :
-
-```ts
-const TYPE_CHART: Record<PokemonType, Partial<Record<PokemonType, number>>> = {
-  normal: {},
-  fire: { water: 2, fire: 0.5, grass: 0.5 },
-  water: { electric: 2, grass: 2, fire: 0.5, water: 0.5 },
-  grass: { fire: 2, water: 0.5, grass: 0.5, electric: 0.5 },
-  electric: { electric: 0.5 },
-};
-```
-
-Comment s'écrirait alors `getEffectiveness(skillType)` dans `Pokemon`, en une seule méthode ? Que se passe-t-il si l'on ajoute `'flying'` à `PokemonType` sans compléter `TYPE_CHART` ?
-
-4. `Trainer` et `Pokemon` gèrent leurs PV avec un code presque identique (`hp`, `isAlive`, `takeDamage`). Faudrait-il que `Trainer` hérite de `Pokemon` ? Quelles autres solutions permettraient d'éviter cette répétition ?
 
 ---
 
