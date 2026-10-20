@@ -3,14 +3,14 @@
 ## Sommaire
 
 - [TP 5 : Héritage, Classes Abstraites et Interfaces](#tp-5--héritage-classes-abstraites-et-interfaces)
-  - [Sommaire](#sommaire)
-  - [Exercice 0 : Mise en place](#exercice-0--mise-en-place)
-  - [Exercice 1 : Héritage](#exercice-1--héritage)
-  - [Exercice 2 : Redéfinition et polymorphisme](#exercice-2--redéfinition-et-polymorphisme)
-  - [Exercice 3 : Classe abstraite](#exercice-3--classe-abstraite)
-  - [Exercice 4 : Interfaces](#exercice-4--interfaces)
-  - [Exercice 5 : Prendre du recul](#exercice-5--prendre-du-recul)
-  - [Bonus : une équipe générique](#bonus--une-équipe-générique)
+    - [Sommaire](#sommaire)
+    - [Exercice 0 : Mise en place](#exercice-0--mise-en-place)
+    - [Exercice 1 : Héritage](#exercice-1--héritage)
+    - [Exercice 2 : Redéfinition et polymorphisme](#exercice-2--redéfinition-et-polymorphisme)
+    - [Exercice 3 : Classe abstraite](#exercice-3--classe-abstraite)
+    - [Exercice 4 : Interfaces](#exercice-4--interfaces)
+    - [Exercice 5 : Prendre du recul](#exercice-5--prendre-du-recul)
+    - [Bonus : une équipe générique](#bonus--une-équipe-générique)
 
 Au TP4, nous avons modélisé des Pokémon avec des classes, protégé leurs données par l'**encapsulation** et assemblé des objets par **composition**. Ce TP va plus loin en construisant des **familles de classes** qui partagent un comportement commun. Les notions abordées, **héritage**, **redéfinition**, **polymorphisme**, **classes abstraites** et **interfaces**, sont les fondations de toute architecture orientée objet.
 
@@ -55,32 +55,75 @@ console.log([pikachu, charmander, bulbasaur, squirtle].map((pokemon) => pokemon.
 <details>
 <summary><strong>Cours : héritage avec <code>extends</code> et <code>super</code></strong></summary>
 
+> Les exemples de ce cours utilisent des véhicules, sans lien avec les Pokémon : à vous de transposer.
+>
 > ### Relation « est-un »
 >
-> L'héritage modélise une relation **« est-un »** (*is-a*) : une capacité à contrecoup **est une** capacité. `RecoilSkill` hérite de tous les attributs et méthodes de `Skill` (`name`, `power`, `describe`, `use`…) sans avoir à les réécrire, et y ajoute ce qui lui est propre (`recoilRatio`).
+> L'héritage modélise une relation **« est-un »** (*is-a*) : une voiture **est un** véhicule. La classe `Car` hérite de tous les attributs et méthodes de `Vehicle` sans avoir à les réécrire, et y ajoute ce qui lui est propre.
 >
-> La composition (TP4) modélise une relation **« a-un »** : un `Pokemon` **a des** `Skill`.
+> À ne pas confondre avec la composition (TP4), qui modélise une relation **« a-un »** : une voiture **a un** moteur.
 >
 > ### `extends`
 >
 > ```ts
-> class RecoilSkill extends Skill { }
+> class Vehicle {
+>   public readonly name: string;
+>   public readonly speed: number;
+>
+>   public constructor(name: string, speed: number) {
+>     if (speed <= 0) {
+>       throw new Error(`The speed of ${name} must be strictly positive.`);
+>     }
+>
+>     this.name = name;
+>     this.speed = speed;
+>   }
+>
+>   public describe(): string {
+>     return `${this.name} - ${this.speed} km/h`;
+>   }
+>
+>   public travel(distance: number): void {
+>     console.log(`${this.name} travels ${distance} km.`);
+>   }
+> }
+>
+> class Car extends Vehicle {
+>   public readonly seats: number; // propre à Car
+>
+>   public constructor(name: string, speed: number, seats: number) {
+>     super(name, speed);
+>     this.seats = seats;
+>   }
+> }
 > ```
 >
-> `Skill` est la classe **parente**, `RecoilSkill` la classe **fille** (ou sous-classe). Une classe ne peut étendre **qu'une seule** classe parente.
+> `Vehicle` est la classe **parente**, `Car` la classe **fille** (ou sous-classe). Une classe ne peut étendre **qu'une seule** classe parente.
+>
+> ```ts
+> const clio = new Car('Clio', 180, 5);
+> clio.describe(); // méthode héritée de Vehicle
+> clio.seats;      // attribut propre à Car
+> ```
 >
 > La sous-classe hérite de tout, mais les membres `private` du parent restent inaccessibles dans son code.
 >
 > ### `super()` dans le constructeur
 >
-> Une sous-classe qui déclare un constructeur **doit** appeler `super(...)`, qui exécute le constructeur du parent : `Constructors for derived classes must contain a 'super' call.` C'est le parent qui initialise `name`, `type` et `power`, et qui vérifie que la puissance est positive. La sous-classe n'initialise que ses propres attributs, **après** l'appel à `super(...)`.
+> Une sous-classe qui déclare un constructeur **doit** appeler `super(...)`, qui exécute le constructeur du parent. Sans lui : `Constructors for derived classes must contain a 'super' call.`
+>
+> Ici, c'est `Vehicle` qui initialise `name` et `speed`, et qui vérifie que la vitesse est positive : `Car` en profite sans réécrire cette vérification. La sous-classe n'initialise que ses propres attributs, **après** l'appel à `super(...)`.
 >
 > ### Une instance de la sous-classe est aussi une instance du parent
 >
-> `instanceof` parcourt toute la chaîne d'héritage : `takeDown` est un `RecoilSkill` **et** un `Skill`. On peut donc passer un `RecoilSkill` partout où un `Skill` est attendu :
+> `instanceof` parcourt toute la chaîne d'héritage : `clio` est une `Car` **et** un `Vehicle`. On peut donc passer une `Car` partout où un `Vehicle` est attendu :
 >
 > ```ts
-> charmander.learnSkill(takeDown); // ✔ learnSkill attend un Skill
+> function startTrip(vehicle: Vehicle): void { /* ... */ }
+>
+> startTrip(clio);                     // ✔ une Car est un Vehicle
+> console.log(clio instanceof Car);     // true
+> console.log(clio instanceof Vehicle); // true
 > ```
 
 </details>
@@ -93,13 +136,30 @@ Confier à chaque capacité la responsabilité de son effet, puis créer une sou
 
 1. Jusqu'ici, c'est `Pokemon.useSkill` qui inflige les dégâts. Or, dans ce TP, chaque famille de capacités aura son propre effet : c'est donc à la **capacité** de savoir ce qu'elle fait.
 
-Dans `Skill`, ajouter une méthode `public use(user: Pokemon, target: Pokemon): void`, qui inflige `power` en dégâts à `target` et affiche le message. Il suffit de **déplacer** le code de `useSkill`. Le type `Pokemon` s'importe avec `import type` :
+Dans `Skill`, ajouter une méthode `use()`. Elle reçoit deux Pokémon : `user`, celui qui lance la capacité, et `target`, celui qui la subit.
 
 ```ts
 import type { Pokemon } from './Pokemon';
+
+export class Skill {
+  // ... (attributs, constructeur et describe() inchangés)
+
+  public use(user: Pokemon, target: Pokemon): void {
+    // À compléter : infliger les dégâts à target, puis afficher le message
+  }
+}
 ```
 
-`useSkill` se contente alors de trouver la capacité et de l'utiliser :
+Son contenu est celui de `useSkill` dans `Pokemon` : le copier, puis l'adapter. Attention, on est maintenant **dans la capacité** : `this` ne désigne plus le Pokémon, mais la capacité elle-même.
+
+| Dans `Pokemon.useSkill` | Devient dans `Skill.use` |
+| --- | --- |
+| `this.name` (le lanceur) | `user.name` |
+| `skill.name` | `this.name` |
+| `skill.power` | `this.power` |
+| `target` | `target` (inchangé) |
+
+Dans `Pokemon`, `useSkill` n'a alors plus qu'à trouver la capacité et à l'utiliser, en se passant elle-même (`this`) comme lanceur :
 
 ```ts
 public useSkill(skillName: string, target: Pokemon): void {
@@ -107,7 +167,13 @@ public useSkill(skillName: string, target: Pokemon): void {
 }
 ```
 
-Tester `pikachu.useSkill('Thunderbolt', charmander)` : le message n'a pas changé. Supprimer ensuite cette ligne.
+Dans `main.ts`, tester `pikachu.useSkill('Thunderbolt', charmander)`. Le message doit être le même qu'au TP4 :
+
+```
+Pikachu uses Thunderbolt! Charmander loses 18 HP (21/39).
+```
+
+Supprimer ensuite cette ligne.
 
 2. Les capacités **à contrecoup**, comme Bélier (*Take Down*), infligent de lourds dégâts, mais blessent aussi le Pokémon qui les lance. Créer un fichier `src/RecoilSkill.ts` :
 
@@ -162,29 +228,58 @@ console.log(takeDown instanceof Skill);       // ?
 >
 > Une sous-classe peut **redéfinir** (*override*) une méthode héritée en écrivant une méthode de même nom et de même signature. Le mot-clé `override` indique explicitement cette intention.
 >
-> Avec `noImplicitOverride`, TypeScript **exige** `override` sur toute redéfinition : `This member must have an 'override' modifier because it overrides a member in the base class 'Skill'.` Inversement, `override` sur une méthode qui n'existe pas dans le parent (une faute de frappe, par exemple) provoque une erreur. On ne peut donc plus redéfinir une méthode par accident.
+> Avec l'option `noImplicitOverride`, TypeScript **exige** `override` sur toute redéfinition : `This member must have an 'override' modifier because it overrides a member in the base class 'Vehicle'.` Inversement, `override` sur une méthode qui n'existe pas dans le parent (une faute de frappe, par exemple) provoque une erreur. On ne peut donc plus redéfinir une méthode par accident.
 >
 > ### `super.methode()`
 >
-> Dans une méthode, `super.use(...)` appelle la version **du parent**. On **enrichit** ainsi le comportement hérité au lieu de le réécrire : `RecoilSkill` inflige les dégâts exactement comme `Skill`, puis ajoute le contrecoup.
+> Dans une méthode, `super.travel(...)` appelle la version **du parent**. On **enrichit** ainsi le comportement hérité au lieu de le réécrire : une voiture se déplace comme n'importe quel véhicule, puis consomme du carburant.
+>
+> ```ts
+> class Car extends Vehicle {
+>   // ... (seats, constructeur)
+>
+>   public override travel(distance: number): void {
+>     super.travel(distance); // Clio travels 10 km.
+>     console.log(`${this.name} burns ${distance * 0.06} L of fuel.`);
+>   }
+> }
+> ```
 >
 > ### Hériter du constructeur
 >
-> Une sous-classe qui ne déclare **pas** de constructeur utilise celui du parent. `DrainSkill` n'a besoin d'aucun attribut supplémentaire : `new DrainSkill('Mega Drain', 'grass', 14)` appelle directement le constructeur de `Skill`.
+> Une sous-classe qui ne déclare **pas** de constructeur utilise celui du parent. Un vélo n'a besoin d'aucun attribut supplémentaire : `new Bike('BMX', 25)` appelle directement le constructeur de `Vehicle`.
+>
+> ```ts
+> class Bike extends Vehicle {
+>   public override describe(): string {
+>     return `${super.describe()} - No engine`;
+>   }
+> }
+> ```
 >
 > ### Polymorphisme
 >
 > À l'exécution, c'est toujours la version de l'**objet réel** qui s'exécute, quel que soit le type déclaré de la variable :
 >
 > ```ts
-> const skill: Skill = takeDown;
-> skill.use(charmander, squirtle); // ← RecoilSkill.use()
+> const vehicle: Vehicle = new Car('Clio', 180, 5);
+> vehicle.travel(10); // ← Car.travel() : le carburant est consommé
 > ```
 >
-> - Le type de la **variable** (`Skill`) détermine ce que le compilateur **autorise** à appeler.
-> - Le type de l'**objet** (`RecoilSkill`) détermine ce qui **s'exécute**.
+> - Le type de la **variable** (`Vehicle`) détermine ce que le compilateur **autorise** à appeler.
+> - Le type de l'**objet** (`Car`) détermine ce qui **s'exécute**.
 >
-> C'est pour cela que `useSkill` et `duel`, écrites une seule fois, fonctionnent avec toutes les capacités : elles appellent `use()`, et chaque capacité y répond à sa manière. Ajouter une nouvelle famille de capacités ne demande aucune modification de `Pokemon`.
+> Une fonction écrite une seule fois pour des `Vehicle` fonctionne donc avec tous les véhicules, chacun répondant à sa manière :
+>
+> ```ts
+> const vehicles: Vehicle[] = [new Car('Clio', 180, 5), new Bike('BMX', 25)];
+>
+> for (const vehicle of vehicles) {
+>   vehicle.travel(10); // Car.travel(), puis Vehicle.travel() pour le vélo
+> }
+> ```
+>
+> Ajouter demain une classe `Truck` ne demandera aucune modification de cette boucle.
 
 </details>
 
@@ -220,9 +315,9 @@ Retirer provisoirement le mot-clé `override` et relever l'erreur.
 Take Down [normal] - Power: 20 - Recoil: 25%
 ```
 
-4. Les capacités **de drain**, comme Méga-Sangsue (*Mega Drain*), infligent des dégâts, puis soignent le lanceur de la moitié de leur puissance. Créer un fichier `src/DrainSkill.ts` avec une classe `DrainSkill` qui étend `Skill`. Elle n'a besoin d'**aucun constructeur** (voir le cours). Redéfinir :
-   - `use()`, qui inflige les dégâts avec `super.use(...)`, puis soigne le lanceur de la moitié de `power` (arrondie à l'entier inférieur) et affiche un message ;
-   - `describe()`, qui retourne `Mega Drain [grass] - Power: 14 - Drain: 50%`.
+4. Les capacités **de drain**, comme Méga-Sangsue (*Mega Drain*), infligent des dégâts, puis soignent le lanceur de la moitié de leur puissance. Créer un fichier `src/DrainSkill.ts` avec une classe `DrainSkill` qui étend `Skill`. Contrairement à `RecoilSkill`, `DrainSkill` n'ajoute aucun attribut : inutile d'écrire un constructeur. Elle utilise automatiquement celui de `Skill`, donc `new DrainSkill('Mega Drain', 'grass', 14)` fonctionne directement (voir le cours). Redéfinir :
+    - `use()`, qui inflige les dégâts avec `super.use(...)`, puis soigne le lanceur de la moitié de `power` (arrondie à l'entier inférieur) et affiche un message ;
+    - `describe()`, qui retourne `Mega Drain [grass] - Power: 14 - Drain: 50%`.
 
 5. Dans `main.ts`, tester le drain :
 
@@ -259,32 +354,40 @@ skill.use(charmander, squirtle);
 
 > ### Pourquoi `abstract` ?
 >
-> `Skill` représente un **concept général** : on n'utilise jamais une capacité « tout court », mais toujours une capacité offensive, de soin, de drain… Le mot-clé `abstract` **interdit l'instanciation directe** : `Cannot create an instance of an abstract class.`
+> `Vehicle` représente un **concept général** : on ne croise jamais un « véhicule » tout court dans la rue, mais toujours une voiture, un vélo, un camion… Le mot-clé `abstract` **interdit l'instanciation directe** :
 >
-> Une classe abstraite reste une vraie classe : elle a un constructeur (appelé par `super(...)`), des attributs (`name`, `type`) et des méthodes concrètes (`describe`) partagés par toutes les sous-classes.
+> ```ts
+> new Vehicle('Mystery', 50); // ✘ Cannot create an instance of an abstract class.
+> ```
+>
+> Une classe abstraite reste une vraie classe : elle a un constructeur (appelé par `super(...)`), des attributs et des méthodes concrètes partagés par toutes les sous-classes.
 >
 > ### Méthode abstraite
 >
 > Une méthode `abstract` n'a **pas de corps**. Elle impose à toute sous-classe concrète de l'implémenter : c'est un **contrat**.
 >
 > ```ts
-> public abstract use(user: Pokemon, target: Pokemon): void;
-> // DamageSkill et HealSkill DOIVENT fournir use()
+> abstract class Vehicle {
+>   // name, speed, constructeur et describe() inchangés
+>
+>   public abstract travel(distance: number): void;
+> }
+> // Car et Bike DOIVENT fournir travel()
 > ```
 >
-> Oublier `use()` dans une sous-classe provoque une erreur : `Non-abstract class 'HealSkill' does not implement inherited abstract member use from class 'Skill'.`
+> Oublier `travel()` dans une sous-classe provoque une erreur : `Non-abstract class 'Bike' does not implement inherited abstract member travel from class 'Vehicle'.`
 >
-> `Skill` ne peut pas écrire `use()` elle-même : il n'existe pas d'effet « par défaut » valable pour toutes les capacités. La méthode abstraite exprime exactement cela : « toute capacité a un effet, mais chaque famille définit le sien ».
+> `Vehicle` ne peut pas écrire `travel()` elle-même : une voiture roule et consomme du carburant, un vélo avance à la force des jambes, il n'existe pas de déplacement « par défaut ». La méthode abstraite exprime exactement cela : « tout véhicule se déplace, mais chacun à sa manière ».
 >
 > Pour une méthode abstraite, `override` n'est pas obligatoire, même avec `noImplicitOverride`. On le garde dans ce TP : il rend la relation visible à la lecture.
 >
 > ### Une hiérarchie sur plusieurs niveaux
 >
-> `DrainSkill` hérite de `DamageSkill`, qui hérite de `Skill`. Un objet `DrainSkill` est donc à la fois un `DrainSkill`, un `DamageSkill` et un `Skill`. Chaque niveau ajoute quelque chose : `Skill` donne le nom et le type, `DamageSkill` la puissance et les dégâts, `DrainSkill` le soin du lanceur.
+> Si `ElectricCar` hérite de `Car`, qui hérite de `Vehicle`, un objet `ElectricCar` est à la fois une `ElectricCar`, une `Car` et un `Vehicle`. Chaque niveau ajoute quelque chose : `Vehicle` donne le nom et la vitesse, `Car` les places, `ElectricCar` la batterie.
 >
 > ### Une classe abstraite reste un type
 >
-> On ne peut pas créer d'objet `Skill`, mais on peut toujours **typer** avec `Skill` : un paramètre `skill: Skill` accepte n'importe quelle instance d'une sous-classe. Grâce au contrat abstrait, on peut appeler `use()` sur n'importe quel `Skill` sans savoir de quelle sous-classe il s'agit : c'est encore du polymorphisme.
+> On ne peut pas créer d'objet `Vehicle`, mais on peut toujours **typer** avec `Vehicle` : un paramètre `vehicle: Vehicle` ou un tableau `Vehicle[]` accepte n'importe quelle instance d'une sous-classe. Grâce au contrat abstrait, on peut appeler `travel()` sur n'importe quel `Vehicle` sans savoir de quelle sous-classe il s'agit : c'est encore du polymorphisme.
 
 </details>
 
@@ -327,16 +430,16 @@ export abstract class Skill {
 ```
 
 3. Créer un fichier `src/DamageSkill.ts` avec une classe `DamageSkill` qui étend `Skill`, et y **déplacer** ce qui concerne les dégâts :
-   - l'attribut `power` ;
-   - un constructeur `public constructor(name: string, type: PokemonType, power: number)`, qui appelle `super(name, type)` et vérifie que `power` est strictement positif ;
-   - `describe()`, qui ajoute la puissance : `Thunderbolt [electric] - Power: 18` ;
-   - `use()`, qui inflige les dégâts.
+    - l'attribut `power` ;
+    - un constructeur `public constructor(name: string, type: PokemonType, power: number)`, qui appelle `super(name, type)` et vérifie que `power` est strictement positif ;
+    - `describe()`, qui ajoute la puissance : `Thunderbolt [electric] - Power: 18` ;
+    - `use()`, qui inflige les dégâts.
 
 4. Faire hériter `RecoilSkill` et `DrainSkill` de `DamageSkill` au lieu de `Skill`. Leur code ne change pas.
 
 5. Plusieurs erreurs apparaissent :
-   - dans `main.ts`, `new Skill(...)` est refusé : relever le message, puis remplacer `Skill` par `DamageSkill` ;
-   - dans `Pokemon`, `getStrongestSkill` ne compile plus : relever le message. **Pourquoi `power` n'existe-t-il plus sur `Skill` ?**
+    - dans `main.ts`, `new Skill(...)` est refusé : relever le message, puis remplacer `Skill` par `DamageSkill` ;
+    - dans `Pokemon`, `getStrongestSkill` ne compile plus : relever le message. **Pourquoi `power` n'existe-t-il plus sur `Skill` ?**
 
 Une capacité de soin n'ayant pas de puissance, « la capacité la plus puissante » n'a plus de sens. Remplacer `getStrongestSkill` par une méthode qui utilise les capacités **à tour de rôle** :
 
@@ -358,10 +461,10 @@ public chooseSkill(): Skill {
 Dans `duel`, remplacer les appels à `getStrongestSkill()` par `chooseSkill()`.
 
 6. Créer un fichier `src/HealSkill.ts` avec une classe `HealSkill` qui étend `Skill` :
-   - un attribut `amount` public en lecture seule : le nombre de PV rendus ;
-   - un constructeur `public constructor(name: string, type: PokemonType, amount: number)`, qui vérifie que `amount` est strictement positif ;
-   - `describe()`, qui retourne `Synthesis [grass] - Heal: 15` ;
-   - `use(user, _target)`, qui soigne le lanceur et affiche :
+    - un attribut `amount` public en lecture seule : le nombre de PV rendus ;
+    - un constructeur `public constructor(name: string, type: PokemonType, amount: number)`, qui vérifie que `amount` est strictement positif ;
+    - `describe()`, qui retourne `Synthesis [grass] - Heal: 15` ;
+    - `use(user, _target)`, qui soigne le lanceur et affiche :
 
 ```
 Bulbasaur uses Synthesis! Bulbasaur recovers 15 HP (45/45).
@@ -397,29 +500,69 @@ Bulbasaur wins the battle!
 
 > ### Une interface est un contrat
 >
-> Une **interface** décrit la **forme** attendue d'un objet : ses propriétés, leurs types, ses méthodes. Elle ne contient aucune implémentation et disparaît complètement à la compilation.
+> Un cheval n'est pas un véhicule : il n'a ni moteur ni pédales, et le faire hériter de `Vehicle` n'aurait pas de sens. Pourtant, comme une voiture, il peut **transporter** quelqu'un. Une **interface** permet de décrire ce point commun :
 >
-> `readonly hp: number` signifie que l'utilisateur de l'interface peut **lire** `hp`, sans pouvoir le modifier. Un getter `hp` (comme dans `Pokemon` et `Trainer`) ou un simple attribut (comme dans le sac de frappe) conviennent tous les deux.
+> ```ts
+> interface Transport {
+>   readonly name: string;
+>   readonly speed: number;
+>   travel(distance: number): void;
+> }
+> ```
+>
+> Une interface décrit la **forme** attendue d'un objet : ses propriétés, leurs types, ses méthodes. Elle ne contient aucune implémentation et disparaît complètement à la compilation.
+>
+> `readonly speed: number` signifie que l'utilisateur de l'interface peut **lire** `speed`, sans pouvoir le modifier. Un getter ou un simple attribut conviennent tous les deux.
 >
 > ### `implements`
 >
 > ```ts
-> class Trainer implements Fighter { }
+> class Horse implements Transport {
+>   public readonly name: string;
+>   public readonly speed = 40;
+>
+>   public constructor(name: string) {
+>     this.name = name;
+>   }
+>
+>   public travel(distance: number): void {
+>     console.log(`${this.name} gallops ${distance} km.`);
+>   }
+> }
 > ```
 >
-> `implements` demande à TypeScript de **vérifier** que la classe respecte le contrat : `Class 'Pokemon' incorrectly implements interface 'Fighter'. Property 'attack' is missing in type 'Pokemon' but required in type 'Fighter'.` Une classe ne peut étendre qu'une seule classe, mais peut implémenter **plusieurs** interfaces : `implements Fighter, Describable`.
+> `implements` demande à TypeScript de **vérifier** que la classe respecte le contrat. Sans `travel()` : `Class 'Horse' incorrectly implements interface 'Transport'. Property 'travel' is missing in type 'Horse' but required in type 'Transport'.`
+>
+> Une classe ne peut étendre qu'une seule classe, mais peut implémenter **plusieurs** interfaces : `implements Transport, Describable`. Elle peut aussi faire les deux : `abstract class Vehicle implements Transport`.
 >
 > ### Le typage structurel
 >
-> En Java ou en C#, un objet n'est un `Fighter` que si sa classe le déclare explicitement. TypeScript fonctionne différemment : il compare les **formes**. Un objet est accepté comme `Fighter` dès qu'il possède tous les membres demandés, avec les bons types, même s'il n'a jamais entendu parler de l'interface. C'est le **typage structurel** (ou *duck typing* : « si ça marche comme un canard et cancane comme un canard… »).
+> En Java ou en C#, un objet n'est un `Transport` que si sa classe le déclare explicitement. TypeScript fonctionne différemment : il compare les **formes**. Un objet est accepté comme `Transport` dès qu'il possède tous les membres demandés, avec les bons types, même s'il n'a jamais entendu parler de l'interface. C'est le **typage structurel** (ou *duck typing* : « si ça marche comme un canard et cancane comme un canard… »).
+>
+> ```ts
+> function journey(transport: Transport, distance: number): void {
+>   console.log(`Departure with ${transport.name}`);
+>   transport.travel(distance);
+> }
+>
+> const skateboard = {
+>   name: 'Skateboard',
+>   speed: 15,
+>   travel(distance: number) {
+>     console.log(`Rolling for ${distance} km...`);
+>   },
+> };
+>
+> journey(skateboard, 2); // ✔ aucun implements, mais la forme est la bonne
+> ```
 >
 > `implements` n'est donc pas obligatoire pour être compatible : il sert à **détecter les erreurs dans la classe elle-même**, au moment de son écriture, plutôt qu'au moment où on l'utilise.
 >
-> Si un membre manque, l'erreur est précise : `Property 'isAlive' is missing in type '{ ... }' but required in type 'Fighter'.`
+> Si un membre manque, l'erreur est précise : `Property 'travel' is missing in type '{ ... }' but required in type 'Transport'.`
 >
 > ### Programmer pour une interface
 >
-> `duel` ne dépend que de `Fighter`. Elle accepte des Pokémon, des dresseurs, un sac de frappe, et accepterait demain un robot ou un boss, **sans être modifiée**. C'est le **principe ouvert/fermé** : le code est ouvert à de nouveaux types, mais fermé aux modifications.
+> `journey` ne dépend que de `Transport`. Elle accepte des voitures, des chevaux, un skateboard, et accepterait demain un bateau ou une montgolfière, **sans être modifiée**. C'est le **principe ouvert/fermé** : le code est ouvert à de nouveaux types, mais fermé aux modifications.
 >
 > ### Classe abstraite ou interface ?
 >
@@ -429,7 +572,7 @@ Bulbasaur wins the battle!
 > | Contient du code (implémentations, valeurs) | ✔ | ✘ |
 > | Une classe peut en utiliser plusieurs | ✘ (une seule avec `extends`) | ✔ |
 > | Existe à l'exécution (`instanceof`) | ✔ | ✘ |
-> | Cas d'usage | Partager du **code** entre classes proches (`Skill` et ses sous-classes) | Décrire une **capacité** commune à des objets variés (Pokémon, dresseur, sac de frappe) |
+> | Cas d'usage | Partager du **code** entre classes proches (`Vehicle`, `Car`, `Bike`) | Décrire une **capacité** commune à des objets variés (voiture, cheval, skateboard) |
 
 </details>
 
@@ -468,15 +611,15 @@ Relever l'erreur : il manque une méthode.
 
 4. Pour que ce soit possible, la cible d'une capacité doit pouvoir être n'importe quel `Fighter`. Dans la méthode `use()` de `Skill` **et de chacune de ses sous-classes**, ainsi que dans `useSkill`, remplacer le type du paramètre `target` par `Fighter`. Le code de ces méthodes ne change pas : il n'utilise que `name`, `hp`, `maxHp` et `takeDamage`, que l'interface garantit.
 
-5. Un dresseur peut aussi se battre, mais ce n'est pas un Pokémon : il n'a ni type, ni capacités. Créer un fichier `src/Trainer.ts` avec une classe `Trainer` qui **n'hérite d'aucune classe** et implémente `Fighter` :
-   - `name` et `maxHp` publics en lecture seule, et un attribut privé `_hp` exposé par un getter `hp` : pour un dresseur, les PV représentent son **moral** ;
-   - constructeur `public constructor(name: string, morale: number)` ;
-   - `describe()` retourne `Trainer Ash - Morale: 20/20` ;
-   - `isAlive()` et `takeDamage(amount)`, le moral ne descendant jamais en dessous de 0 ;
-   - `attack(target)` : le dresseur lance une Poké Ball sur la cible, qui inflige 5 dégâts.
+5. Un dresseur peut aussi se battre à coups de poing, mais ce n'est pas un Pokémon : il n'a ni type, ni capacités. Créer un fichier `src/Trainer.ts` avec une classe `Trainer` qui **n'hérite d'aucune classe** et implémente `Fighter` :
+    - `name` et `maxHp` publics en lecture seule, et un attribut privé `_hp` exposé par un getter `hp` ;
+    - constructeur `public constructor(name: string, maxHp: number)` ;
+    - `describe()` retourne `Trainer Ash - HP: 20/20` ;
+    - `isAlive()` et `takeDamage(amount)`, les PV ne descendant jamais en dessous de 0 ;
+    - `attack(target)` : le dresseur donne un coup de poing à la cible, qui inflige 5 dégâts.
 
 ```
-Ash throws a Poké Ball at Pikachu!
+Ash punches Pikachu! Pikachu loses 5 HP (30/35).
 ```
 
 6. Créer un fichier `src/duel.ts` avec une **fonction** `export function duel(a: Fighter, b: Fighter): Fighter`, qui reprend la logique de `Pokemon.duel` en utilisant `attack`. Cette fonction ne connaît ni `Pokemon`, ni `Trainer` : elle ne manipule que le contrat. Supprimer ensuite la méthode statique `Pokemon.duel`, et remplacer ses appels dans `main.ts` par `duel(...)`.
@@ -524,21 +667,31 @@ duel(pikachu, punchingBag);
 
 > ### Ce qu'il faut retenir
 >
-> - L'**héritage** est adapté quand les sous-classes ont un **comportement** différent et une vraie relation « est-un » : `RecoilSkill`, `DrainSkill` et `HealSkill` **sont des** capacités, et chacune a un effet que les autres n'ont pas.
-> - Quand les sous-classes ne diffèrent que par des **valeurs** (une table de multiplicateurs), une **donnée** suffit, et évite de multiplier les classes. `FirePokemon` et `WaterPokemon` auraient exactement le même code, avec des nombres différents.
-> - Une classe n'a qu'un seul parent. Dès qu'un objet combine plusieurs caractéristiques (double type), l'héritage atteint ses limites : on se tourne vers la **composition** ou les **données**.
-> - Partager du code ne suffit pas à justifier l'héritage : un dresseur n'**est pas** un Pokémon. Pour éviter de dupliquer la gestion des PV, on peut extraire une classe dédiée (une jauge de PV, par exemple) que `Pokemon` et `Trainer` **utilisent** par composition.
-> - Les **interfaces** permettent de faire coopérer des objets sans lien d'héritage : `duel` fait combattre un Pokémon et un dresseur sans qu'ils aient de parent commun.
+> - L'**héritage** est adapté quand les sous-classes ont un **comportement** différent et une vraie relation « est-un » : `Car` et `Bike` **sont des** véhicules, et chacun se déplace à sa manière.
+> - Quand les sous-classes ne diffèrent que par des **valeurs**, une **donnée** suffit. Créer `RedCar` et `BlueCar` n'aurait aucun sens : ces classes auraient exactement le même code, seule la couleur changerait. Un attribut `color` fait l'affaire.
+> - Une classe n'a qu'un seul parent. Une voiture amphibie est à la fois une voiture et un bateau, mais `class AmphibiousCar extends Car, Boat` ne compile pas. Dès qu'un objet combine plusieurs caractéristiques, l'héritage atteint ses limites : on se tourne vers la **composition** ou les **données**.
+> - Partager du code ne suffit pas à justifier l'héritage. Un cheval et une voiture ont tous deux un compteur de kilomètres, mais un cheval n'**est pas** une voiture. Pour ne pas dupliquer ce code, on peut extraire une classe dédiée (`Odometer`) que `Horse` et `Car` **utilisent** par composition.
+> - Les **interfaces** permettent de faire coopérer des objets sans lien d'héritage : `journey` accepte une voiture et un cheval sans qu'ils aient de parent commun.
 >
 > D'où le conseil classique : *« préférer la composition à l'héritage »*. L'héritage n'est pas à proscrire, mais ce ne doit pas être le premier réflexe.
 >
 > ### `Record`, `Partial` et `??`
 >
-> - `Record<PokemonType, number>` est le type d'un objet qui associe un `number` à **chaque** type de Pokémon.
-> - `Partial<...>` rend toutes les clés facultatives : une ligne de la table peut ne lister que les types qui ont un effet particulier.
-> - `TYPE_CHART[this.type][skillType]` vaut `undefined` si la clé est absente. L'opérateur `??` retourne alors la valeur de droite : `TYPE_CHART[this.type][skillType] ?? 1`.
+> ```ts
+> type Road = 'city' | 'road' | 'highway';
 >
-> Avec `Record<PokemonType, ...>`, TypeScript **exige** une entrée pour chaque type : ajouter `'flying'` à `PokemonType` sans compléter `TYPE_CHART` provoque une erreur de compilation. La table de données reste ainsi aussi sûre que des classes.
+> const SPEED_LIMITS: Record<Road, number> = { city: 50, road: 80, highway: 130 };
+> const TOLLS: Partial<Record<Road, number>> = { highway: 12 };
+>
+> console.log(TOLLS.highway ?? 0); // 12
+> console.log(TOLLS.city ?? 0);    // 0 : pas de péage en ville
+> ```
+>
+> - `Record<Road, number>` est le type d'un objet qui associe un `number` à **chaque** valeur de `Road`.
+> - `Partial<...>` rend toutes les clés facultatives : `TOLLS` ne liste que les routes à péage.
+> - Une clé absente vaut `undefined`. L'opérateur `??` retourne alors la valeur de droite.
+>
+> Avec `Record<Road, ...>`, TypeScript **exige** une entrée pour chaque valeur : ajouter `'track'` à `Road` sans compléter `SPEED_LIMITS` provoque une erreur de compilation (`Property 'track' is missing in type ...`). Une table de données reste ainsi aussi sûre que des classes.
 
 </details>
 
@@ -577,13 +730,31 @@ Comment s'écrirait alors `getEffectiveness(skillType)` dans `Pokemon`, en une s
 <details>
 <summary><strong>Cours : classes génériques</strong></summary>
 
-> Un **générique** est un paramètre de type : `Team<T>` est un modèle d'équipe, et `T` est remplacé par un type concret à l'utilisation (`Team<Pokemon>`, `Team<Trainer>`).
+> Un **générique** est un paramètre de type : `Garage<T>` est un modèle de garage, et `T` est remplacé par un type concret à l'utilisation (`Garage<Car>`, `Garage<Horse>`).
 >
-> La contrainte `T extends Fighter` limite les types acceptés à ceux qui respectent l'interface `Fighter` : `Type 'string' does not satisfy the constraint 'Fighter'.` Dans la classe, on peut donc appeler `member.isAlive()`.
+> ```ts
+> class Garage<T extends Transport> {
+>   private _items: T[] = [];
 >
-> Contrairement à une `Team` qui stockerait des `Fighter[]`, la version générique **conserve le type précis** des membres : `getLeader()` retourne un `Pokemon`, pas un simple `Fighter`, donc `type` reste accessible.
+>   public add(item: T): void {
+>     this._items.push(item);
+>   }
 >
-> L'opérateur `?.` (*optional chaining*) lit `type` seulement si `getLeader()` n'a pas retourné `undefined`.
+>   public getFirst(): T | undefined {
+>     return this._items[0];
+>   }
+> }
+>
+> const garage = new Garage<Car>();
+> garage.add(new Car('Clio', 180, 5));
+> console.log(garage.getFirst()?.seats); // 5
+> ```
+>
+> La contrainte `T extends Transport` limite les types acceptés à ceux qui respectent l'interface `Transport` : `new Garage<string>()` provoque `Type 'string' does not satisfy the constraint 'Transport'.` Dans la classe, on peut donc utiliser `name`, `speed` et `travel()` sur les éléments.
+>
+> Contrairement à un garage qui stockerait des `Transport[]`, la version générique **conserve le type précis** des éléments : `getFirst()` retourne une `Car`, pas un simple `Transport`, donc `seats` reste accessible. Et un `Garage<Car>` refuse un cheval.
+>
+> L'opérateur `?.` (*optional chaining*) lit `seats` seulement si `getFirst()` n'a pas retourné `undefined`.
 
 </details>
 
@@ -594,11 +765,10 @@ Comment s'écrirait alors `getEffectiveness(skillType)` dans `Pokemon`, en une s
 ### Instructions
 
 1. Créer un fichier `src/Team.ts` avec une classe `Team<T extends Fighter>` qui contient un attribut privé `_members: T[]` et les méthodes :
-   - `public add(member: T): void` ;
-   - `public getAlive(): T[]`, qui retourne les membres encore en vie ;
-   - `public getLeader(): T | undefined`, qui retourne le premier membre en vie.
+    - `public add(member: T): void` ;
+    - `public getAlive(): T[]`, qui retourne les membres encore en vie ;
+    - `public getLeader(): T | undefined`, qui retourne le premier membre en vie.
 
 2. Créer une `Team<Pokemon>`, y ajouter `pikachu` et `charmander`, puis vérifier que `team.getLeader()?.type` est accepté : TypeScript sait que le leader est un `Pokemon`, alors que `type` n'existe pas sur `Fighter`.
 
 3. Tenter d'ajouter `ash` à cette équipe, puis de créer une `Team<string>`. Expliquer les deux erreurs.
-
