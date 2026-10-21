@@ -3,14 +3,15 @@
 ## Sommaire
 
 - [TP 5 : Héritage, Classes Abstraites et Interfaces](#tp-5--héritage-classes-abstraites-et-interfaces)
-    - [Sommaire](#sommaire)
-    - [Exercice 0 : Mise en place](#exercice-0--mise-en-place)
-    - [Exercice 1 : Héritage](#exercice-1--héritage)
-    - [Exercice 2 : Redéfinition et polymorphisme](#exercice-2--redéfinition-et-polymorphisme)
-    - [Exercice 3 : Classe abstraite](#exercice-3--classe-abstraite)
-    - [Exercice 4 : Interfaces](#exercice-4--interfaces)
-    - [Exercice 5 : Prendre du recul](#exercice-5--prendre-du-recul)
-    - [Bonus : une équipe générique](#bonus--une-équipe-générique)
+  - [Sommaire](#sommaire)
+  - [Exercice 0 : Mise en place](#exercice-0--mise-en-place)
+  - [Exercice 1 : Héritage](#exercice-1--héritage)
+  - [Exercice 2 : Redéfinition et polymorphisme](#exercice-2--redéfinition-et-polymorphisme)
+  - [Exercice 3 : Classe abstraite](#exercice-3--classe-abstraite)
+  - [Exercice 4 : Visibilité `protected`](#exercice-4--visibilité-protected)
+  - [Exercice 5 : Interfaces](#exercice-5--interfaces)
+  - [Exercice 6 : Prendre du recul](#exercice-6--prendre-du-recul)
+  - [Bonus : une équipe générique](#bonus--une-équipe-générique)
 
 Au TP4, nous avons modélisé des Pokémon avec des classes, protégé leurs données par l'**encapsulation** et assemblé des objets par **composition**. Ce TP va plus loin en construisant des **familles de classes** qui partagent un comportement commun. Les notions abordées, **héritage**, **redéfinition**, **polymorphisme**, **classes abstraites** et **interfaces**, sont les fondations de toute architecture orientée objet.
 
@@ -22,13 +23,76 @@ L'application : toujours le simulateur de combat, enrichi de nouvelles familles 
 
 ### Objectif
 
-Repartir du projet du TP4.
+Repartir du projet du TP4, et y apporter deux modifications qui préparent la suite.
 
 ### Instructions
 
 1. Faire une copie du dossier `tp4` nommée `tp5`, puis ouvrir `tp5` dans l'éditeur. Si votre TP4 n'est pas terminé, récupérer la correction sur le dépôt GitHub.
 
-2. Remplacer le contenu de `src/main.ts` par :
+2. Jusqu'ici, c'est `Pokemon.useSkill` qui inflige les dégâts. Or, dans ce TP, chaque famille de capacités aura son propre effet : c'est donc à la **capacité** de savoir ce qu'elle fait. Remplacer le contenu de `src/Skill.ts` par :
+
+```ts
+import type { PokemonType } from './types/pokemon.types';
+import type { Pokemon } from './Pokemon';
+
+export class Skill {
+  public readonly name: string;
+  public readonly type: PokemonType;
+  public readonly power: number;
+
+  public constructor(name: string, type: PokemonType, power: number) {
+    if (power <= 0) {
+      throw new Error(`The power of ${name} must be strictly positive.`);
+    }
+
+    this.name = name;
+    this.type = type;
+    this.power = power;
+  }
+
+  public describe(): string {
+    return `${this.name} [${this.type}] - Power: ${this.power}`;
+  }
+
+  public use(user: Pokemon, target: Pokemon): void {
+    target.takeDamage(this.power);
+    console.log(
+      `${user.name} uses ${this.name}! ${target.name} loses ${this.power} HP (${target.hp}/${target.maxHp}).`
+    );
+  }
+}
+```
+
+La méthode `use()` reçoit deux Pokémon : `user`, celui qui lance la capacité, et `target`, celui qui la subit. Son contenu est celui de l'ancien `useSkill`, mais on est maintenant **dans la capacité** : `this` désigne la capacité, et le lanceur est `user`.
+
+Dans `Pokemon`, remplacer `useSkill` : elle n'a plus qu'à trouver la capacité et à l'utiliser, en se passant elle-même (`this`) comme lanceur :
+
+```ts
+public useSkill(skillName: string, target: Pokemon): void {
+  this.findSkill(skillName).use(this, target);
+}
+```
+
+3. Dans ce TP, certaines capacités n'auront pas de puissance : « la capacité la plus puissante » n'aura plus de sens. Dans `Pokemon`, remplacer `getStrongestSkill` par une méthode qui utilise les capacités **à tour de rôle** :
+
+```ts
+private _turn = 0;
+
+public chooseSkill(): Skill {
+  if (this._skills.length === 0) {
+    throw new Error(`${this.name} does not know any skill.`);
+  }
+
+  const skill = this._skills[this._turn % this._skills.length];
+  this._turn++;
+
+  return skill;
+}
+```
+
+Dans `duel`, remplacer les appels à `getStrongestSkill()` par `chooseSkill()`.
+
+4. Remplacer le contenu de `src/main.ts` par :
 
 ```ts
 import { Pokemon } from './Pokemon';
@@ -46,7 +110,11 @@ squirtle.learnSkill(new Skill('Water Gun', 'water', 16));
 console.log([pikachu, charmander, bulbasaur, squirtle].map((pokemon) => pokemon.describe()));
 ```
 
-3. Lancer `npm run dev` et vérifier que la description des quatre Pokémon s'affiche dans la console.
+5. Lancer `npm run dev` et vérifier que la description des quatre Pokémon s'affiche dans la console. Tester ensuite `pikachu.useSkill('Thunderbolt', charmander)` : le message doit être le même qu'au TP4, puis supprimer cette ligne.
+
+```
+Pikachu uses Thunderbolt! Charmander loses 18 HP (21/39).
+```
 
 ---
 
@@ -130,52 +198,11 @@ console.log([pikachu, charmander, bulbasaur, squirtle].map((pokemon) => pokemon.
 
 ### Objectif
 
-Confier à chaque capacité la responsabilité de son effet, puis créer une sous-classe `RecoilSkill` qui **hérite** de `Skill`.
+Créer une sous-classe `RecoilSkill` qui **hérite** de `Skill`.
 
 ### Instructions
 
-1. Jusqu'ici, c'est `Pokemon.useSkill` qui inflige les dégâts. Or, dans ce TP, chaque famille de capacités aura son propre effet : c'est donc à la **capacité** de savoir ce qu'elle fait.
-
-Dans `Skill`, ajouter une méthode `use()`. Elle reçoit deux Pokémon : `user`, celui qui lance la capacité, et `target`, celui qui la subit.
-
-```ts
-import type { Pokemon } from './Pokemon';
-
-export class Skill {
-  // ... (attributs, constructeur et describe() inchangés)
-
-  public use(user: Pokemon, target: Pokemon): void {
-    // À compléter : infliger les dégâts à target, puis afficher le message
-  }
-}
-```
-
-Son contenu est celui de `useSkill` dans `Pokemon` : le copier, puis l'adapter. Attention, on est maintenant **dans la capacité** : `this` ne désigne plus le Pokémon, mais la capacité elle-même.
-
-| Dans `Pokemon.useSkill` | Devient dans `Skill.use` |
-| --- | --- |
-| `this.name` (le lanceur) | `user.name` |
-| `skill.name` | `this.name` |
-| `skill.power` | `this.power` |
-| `target` | `target` (inchangé) |
-
-Dans `Pokemon`, `useSkill` n'a alors plus qu'à trouver la capacité et à l'utiliser, en se passant elle-même (`this`) comme lanceur :
-
-```ts
-public useSkill(skillName: string, target: Pokemon): void {
-  this.findSkill(skillName).use(this, target);
-}
-```
-
-Dans `main.ts`, tester `pikachu.useSkill('Thunderbolt', charmander)`. Le message doit être le même qu'au TP4 :
-
-```
-Pikachu uses Thunderbolt! Charmander loses 18 HP (21/39).
-```
-
-Supprimer ensuite cette ligne.
-
-2. Les capacités **à contrecoup**, comme Bélier (*Take Down*), infligent de lourds dégâts, mais blessent aussi le Pokémon qui les lance. Créer un fichier `src/RecoilSkill.ts` :
+1. Les capacités **à contrecoup**, comme Bélier (*Take Down*), infligent de lourds dégâts, mais blessent aussi le Pokémon qui les lance. Créer un fichier `src/RecoilSkill.ts` :
 
 ```ts
 import type { PokemonType } from './types/pokemon.types';
@@ -191,7 +218,7 @@ export class RecoilSkill extends Skill {
 }
 ```
 
-3. Dans `main.ts`, créer une capacité à contrecoup et l'utiliser :
+2. Dans `main.ts`, créer une capacité à contrecoup et l'utiliser :
 
 ```ts
 import { RecoilSkill } from './RecoilSkill';
@@ -206,16 +233,16 @@ charmander.useSkill('Take Down', squirtle);
 
 **Question** : la classe `RecoilSkill` ne déclare ni `name`, ni `power`, ni `describe()`, ni `use()`. D'où viennent-ils ? Charmander subit-il le contrecoup ?
 
-4. `learnSkill` attend un `Skill`. **Pourquoi accepte-t-elle un `RecoilSkill` ?** Vérifier avec `instanceof` :
+3. `learnSkill` attend un `Skill`. **Pourquoi accepte-t-elle un `RecoilSkill` ?** Vérifier avec `instanceof` :
 
 ```ts
 console.log(takeDown instanceof RecoilSkill); // ?
 console.log(takeDown instanceof Skill);       // ?
 ```
 
-5. Supprimer provisoirement l'appel à `super(...)` et relever le message d'erreur.
+4. Supprimer provisoirement l'appel à `super(...)` et relever le message d'erreur.
 
-6. Dans un `try` / `catch`, tenter de créer `new RecoilSkill('Broken', 'normal', -5, 0.25)`. **Quel message obtient-on ? Où est écrite cette vérification ?**
+5. Dans un `try` / `catch`, tenter de créer `new RecoilSkill('Broken', 'normal', -5, 0.25)`. **Quel message obtient-on ? Où est écrite cette vérification ?**
 
 ---
 
@@ -316,8 +343,8 @@ Take Down [normal] - Power: 20 - Recoil: 25%
 ```
 
 4. Les capacités **de drain**, comme Méga-Sangsue (*Mega Drain*), infligent des dégâts, puis soignent le lanceur de la moitié de leur puissance. Créer un fichier `src/DrainSkill.ts` avec une classe `DrainSkill` qui étend `Skill`. Contrairement à `RecoilSkill`, `DrainSkill` n'ajoute aucun attribut : inutile d'écrire un constructeur. Elle utilise automatiquement celui de `Skill`, donc `new DrainSkill('Mega Drain', 'grass', 14)` fonctionne directement (voir le cours). Redéfinir :
-    - `use()`, qui inflige les dégâts avec `super.use(...)`, puis soigne le lanceur de la moitié de `power` (arrondie à l'entier inférieur) et affiche un message ;
-    - `describe()`, qui retourne `Mega Drain [grass] - Power: 14 - Drain: 50%`.
+   - `use()`, qui inflige les dégâts avec `super.use(...)`, puis soigne le lanceur de la moitié de `power` (arrondie à l'entier inférieur) et affiche un message ;
+   - `describe()`, qui retourne `Mega Drain [grass] - Power: 14 - Drain: 50%`.
 
 5. Dans `main.ts`, tester le drain :
 
@@ -350,7 +377,7 @@ skill.use(charmander, squirtle);
 ## Exercice 3 : Classe abstraite
 
 <details>
-<summary><strong>Cours : classes abstraites et visibilité <code>protected</code></strong></summary>
+<summary><strong>Cours : classes abstraites</strong></summary>
 
 > ### Pourquoi `abstract` ?
 >
@@ -388,7 +415,100 @@ skill.use(charmander, squirtle);
 > ### Une classe abstraite reste un type
 >
 > On ne peut pas créer d'objet `Vehicle`, mais on peut toujours **typer** avec `Vehicle` : un paramètre `vehicle: Vehicle` ou un tableau `Vehicle[]` accepte n'importe quelle instance d'une sous-classe. Grâce au contrat abstrait, on peut appeler `travel()` sur n'importe quel `Vehicle` sans savoir de quelle sous-classe il s'agit : c'est encore du polymorphisme.
->
+
+</details>
+
+### Objectif
+
+Ajouter les capacités de soin et réorganiser la famille des capacités autour d'une **classe abstraite**.
+
+### Instructions
+
+1. Les capacités **de soin**, comme Synthèse (*Synthesis*), n'infligent aucun dégât : elles soignent le lanceur. **Peut-on écrire `class HealSkill extends Skill` ? Que vaudrait `power` ? Que ferait la méthode `use()` héritée ?**
+
+Le problème : `Skill` mélange ce que **toutes** les capacités ont (un nom, un type, un effet) et ce que seules les capacités **offensives** ont (une puissance, des dégâts). La solution consiste à séparer les deux :
+
+```
+Skill (abstraite)      name, type, describe(), use() abstraite
+├── DamageSkill        power, use() inflige des dégâts
+│   ├── RecoilSkill    … puis subit un contrecoup
+│   └── DrainSkill     … puis soigne le lanceur
+└── HealSkill          amount, use() soigne le lanceur
+```
+
+2. Faire une copie du fichier `src/Skill.ts` nommée `src/DamageSkill.ts`, sans la modifier pour l'instant. Le code actuel de `Skill` est celui d'une capacité offensive : il servira de point de départ à `DamageSkill`.
+
+3. Transformer `Skill` en classe abstraite, qui ne garde que ce qui est commun à toutes les capacités :
+
+```ts
+import type { PokemonType } from './types/pokemon.types';
+import type { Pokemon } from './Pokemon';
+
+export abstract class Skill {
+  public readonly name: string;
+  public readonly type: PokemonType;
+
+  public constructor(name: string, type: PokemonType) {
+    this.name = name;
+    this.type = type;
+  }
+
+  public describe(): string {
+    return `${this.name} [${this.type}]`;
+  }
+
+  public abstract use(user: Pokemon, target: Pokemon): void;
+}
+```
+
+4. Adapter `src/DamageSkill.ts` pour en faire une sous-classe de `Skill` :
+   - renommer la classe en `DamageSkill`, la faire hériter de `Skill` et importer `Skill` ;
+   - supprimer les attributs `name` et `type`, désormais hérités : seul `power` reste ;
+   - dans le constructeur, remplacer `this.name = name;` et `this.type = type;` par un appel à `super(name, type)`, placé **au début** du constructeur ;
+   - ajouter `override` devant `describe()` et `use()`, et réécrire `describe()` avec `super.describe()`. Le résultat ne change pas : `Thunderbolt [electric] - Power: 18`.
+
+5. Faire hériter `RecoilSkill` et `DrainSkill` de `DamageSkill` au lieu de `Skill`. Leur code ne change pas, seul l'import est à modifier.
+
+6. Dans `main.ts`, `new Skill(...)` est maintenant refusé : relever le message, puis remplacer `Skill` par `DamageSkill`.
+
+7. Créer un fichier `src/HealSkill.ts` avec une classe `HealSkill` qui étend `Skill` :
+   - un attribut `amount` public en lecture seule : le nombre de PV rendus ;
+   - un constructeur `public constructor(name: string, type: PokemonType, amount: number)`, qui vérifie que `amount` est strictement positif ;
+   - `describe()`, qui retourne `Synthesis [grass] - Heal: 15` ;
+   - `use(user, _target)`, qui soigne le lanceur et affiche :
+
+```
+Bulbasaur uses Synthesis! Bulbasaur recovers 15 HP (45/45).
+```
+
+Le `_` devant `_target` indique à TypeScript que le paramètre est volontairement inutilisé (option `noUnusedParameters`) : une capacité de soin ne touche pas la cible, mais `use()` doit respecter la signature imposée par `Skill`.
+
+8. Retirer provisoirement `use()` de `HealSkill` et relever l'erreur.
+
+9. Apprendre `new HealSkill('Synthesis', 'grass', 15)` à `bulbasaur`. Mettre en commentaire les duels précédents de `main.ts`, soigner complètement `charmander`, puis lancer `Pokemon.duel(bulbasaur, charmander)`. Les trois familles de capacités doivent apparaître :
+
+```
+--- Round 1 ---
+Bulbasaur uses Mega Drain! Charmander loses 14 HP (25/39).
+Bulbasaur drains 7 HP (39/45).
+Charmander uses Ember! Bulbasaur loses 16 HP (23/45).
+--- Round 2 ---
+Bulbasaur uses Synthesis! Bulbasaur recovers 15 HP (38/45).
+Charmander uses Take Down! Bulbasaur loses 20 HP (18/45).
+Charmander is hurt by recoil and loses 5 HP (20/39).
+...
+Bulbasaur wins the battle!
+```
+
+10. **Question** : plus aucun objet ne peut être créé avec `new Skill(...)`. Pourtant, `learnSkill(skill: Skill)`, `chooseSkill(): Skill` et l'attribut `_skills: Skill[]` compilent toujours. Pourquoi ?
+
+---
+
+## Exercice 4 : Visibilité `protected`
+
+<details>
+<summary><strong>Cours : visibilité <code>protected</code></strong></summary>
+
 > ### `protected` : visible par les sous-classes
 >
 > Les membres `private` d'une classe sont inaccessibles dans ses sous-classes. C'est parfois trop strict : un attribut doit rester caché de l'extérieur, mais les sous-classes ont besoin de l'utiliser. C'est le rôle de `protected`.
@@ -423,114 +543,23 @@ skill.use(charmander, squirtle);
 
 ### Objectif
 
-Ajouter les capacités de soin, réorganiser la famille des capacités autour d'une **classe abstraite**, et découvrir la visibilité `protected`.
+Cacher la puissance d'une capacité au code extérieur, tout en la laissant accessible aux sous-classes.
 
 ### Instructions
 
-1. Les capacités **de soin**, comme Synthèse (*Synthesis*), n'infligent aucun dégât : elles soignent le lanceur. **Peut-on écrire `class HealSkill extends Skill` ? Que vaudrait `power` ? Que ferait la méthode `use()` héritée ?**
+Dans `DamageSkill`, `power` est public : n'importe quel code peut le lire, alors que seules `DamageSkill` et ses sous-classes en ont besoin.
 
-Le problème : `Skill` mélange ce que **toutes** les capacités ont (un nom, un type, un effet) et ce que seules les capacités **offensives** ont (une puissance, des dégâts). La solution consiste à séparer les deux :
+1. Passer `power` en `private` (en gardant `readonly`). Relever les erreurs qui apparaissent dans `RecoilSkill` et `DrainSkill`.
 
-```
-Skill (abstraite)      name, type, describe(), use() abstraite
-├── DamageSkill        power, use() inflige des dégâts
-│   ├── RecoilSkill    … puis subit un contrecoup
-│   └── DrainSkill     … puis soigne le lanceur
-└── HealSkill          amount, use() soigne le lanceur
-```
+2. Remplacer `private` par `protected`. Les erreurs disparaissent.
 
-2. Transformer `Skill` en classe abstraite, qui ne garde que ce qui est commun à toutes les capacités :
+3. Dans `main.ts`, tenter d'afficher `takeDown.power`, relever l'erreur, puis supprimer cette ligne.
 
-```ts
-export abstract class Skill {
-  public readonly name: string;
-  public readonly type: PokemonType;
-
-  public constructor(name: string, type: PokemonType) {
-    this.name = name;
-    this.type = type;
-  }
-
-  public describe(): string {
-    return `${this.name} [${this.type}]`;
-  }
-
-  public abstract use(user: Pokemon, target: Pokemon): void;
-}
-```
-
-3. Créer un fichier `src/DamageSkill.ts` avec une classe `DamageSkill` qui étend `Skill`, et y **déplacer** ce qui concerne les dégâts :
-    - l'attribut `power` ;
-    - un constructeur `public constructor(name: string, type: PokemonType, power: number)`, qui appelle `super(name, type)` et vérifie que `power` est strictement positif ;
-    - `describe()`, qui ajoute la puissance : `Thunderbolt [electric] - Power: 18` ;
-    - `use()`, qui inflige les dégâts.
-
-4. Faire hériter `RecoilSkill` et `DrainSkill` de `DamageSkill` au lieu de `Skill`. Leur code ne change pas.
-
-5. Plusieurs erreurs apparaissent :
-    - dans `main.ts`, `new Skill(...)` est refusé : relever le message, puis remplacer `Skill` par `DamageSkill` ;
-    - dans `Pokemon`, `getStrongestSkill` ne compile plus : relever le message. **Pourquoi `power` n'existe-t-il plus sur `Skill` ?**
-
-Une capacité de soin n'ayant pas de puissance, « la capacité la plus puissante » n'a plus de sens. Remplacer `getStrongestSkill` par une méthode qui utilise les capacités **à tour de rôle** :
-
-```ts
-private _turn = 0;
-
-public chooseSkill(): Skill {
-  if (this._skills.length === 0) {
-    throw new Error(`${this.name} does not know any skill.`);
-  }
-
-  const skill = this._skills[this._turn % this._skills.length];
-  this._turn++;
-
-  return skill;
-}
-```
-
-Dans `duel`, remplacer les appels à `getStrongestSkill()` par `chooseSkill()`.
-
-6. Dans `DamageSkill`, `power` est public : n'importe quel code peut le lire, alors que seules `DamageSkill` et ses sous-classes en ont besoin.
-    - Passer `power` en `private` (en gardant `readonly`). Relever les erreurs qui apparaissent dans `RecoilSkill` et `DrainSkill`.
-    - Remplacer `private` par `protected`. Les erreurs disparaissent.
-    - Dans `main.ts`, tenter d'afficher `takeDown.power`, relever l'erreur, puis supprimer cette ligne.
-
-   **Question** : quelle est la différence entre `private` et `protected` ?
-
-7. Créer un fichier `src/HealSkill.ts` avec une classe `HealSkill` qui étend `Skill` :
-    - un attribut `amount` public en lecture seule : le nombre de PV rendus ;
-    - un constructeur `public constructor(name: string, type: PokemonType, amount: number)`, qui vérifie que `amount` est strictement positif ;
-    - `describe()`, qui retourne `Synthesis [grass] - Heal: 15` ;
-    - `use(user, _target)`, qui soigne le lanceur et affiche :
-
-```
-Bulbasaur uses Synthesis! Bulbasaur recovers 15 HP (45/45).
-```
-
-Le `_` devant `_target` indique à TypeScript que le paramètre est volontairement inutilisé (option `noUnusedParameters`) : une capacité de soin ne touche pas la cible, mais `use()` doit respecter la signature imposée par `Skill`.
-
-8. Retirer provisoirement `use()` de `HealSkill` et relever l'erreur.
-
-9. Apprendre `new HealSkill('Synthesis', 'grass', 15)` à `bulbasaur`. Mettre en commentaire les duels précédents de `main.ts`, soigner complètement `bulbasaur` et `charmander`, puis lancer `Pokemon.duel(bulbasaur, charmander)`. Les trois familles de capacités doivent apparaître :
-
-```
---- Round 1 ---
-Bulbasaur uses Mega Drain! Charmander loses 14 HP (25/39).
-Bulbasaur drains 7 HP (45/45).
-Charmander uses Ember! Bulbasaur loses 16 HP (29/45).
---- Round 2 ---
-Bulbasaur uses Synthesis! Bulbasaur recovers 15 HP (44/45).
-Charmander uses Take Down! Bulbasaur loses 20 HP (24/45).
-Charmander is hurt by recoil and loses 5 HP (20/39).
-...
-Bulbasaur wins the battle!
-```
-
-10. **Question** : plus aucun objet ne peut être créé avec `new Skill(...)`. Pourtant, `learnSkill(skill: Skill)`, `chooseSkill(): Skill` et l'attribut `_skills: Skill[]` compilent toujours. Pourquoi ?
+4. **Question** : quelle est la différence entre `private` et `protected` ?
 
 ---
 
-## Exercice 4 : Interfaces
+## Exercice 5 : Interfaces
 
 <details>
 <summary><strong>Cours : interfaces et typage structurel</strong></summary>
@@ -648,12 +677,14 @@ Relever l'erreur : il manque une méthode.
 
 4. Pour que ce soit possible, la cible d'une capacité doit pouvoir être n'importe quel `Fighter`. Dans la méthode `use()` de `Skill` **et de chacune de ses sous-classes**, ainsi que dans `useSkill`, remplacer le type du paramètre `target` par `Fighter`. Le code de ces méthodes ne change pas : il n'utilise que `name`, `hp`, `maxHp` et `takeDamage`, que l'interface garantit.
 
+Il s'agit d'un changement mécanique, à faire dans les cinq classes (`Skill`, `DamageSkill`, `RecoilSkill`, `DrainSkill`, `HealSkill`), sans oublier l'`import type` de `Fighter`. TypeScript ne signale pas une sous-classe oubliée : vérifier chacune d'elles.
+
 5. Un dresseur peut aussi se battre à coups de poing, mais ce n'est pas un Pokémon : il n'a ni type, ni capacités. Créer un fichier `src/Trainer.ts` avec une classe `Trainer` qui **n'hérite d'aucune classe** et implémente `Fighter` :
-    - `name` et `maxHp` publics en lecture seule, et un attribut privé `_hp` exposé par un getter `hp` ;
-    - constructeur `public constructor(name: string, maxHp: number)` ;
-    - `describe()` retourne `Trainer Ash - HP: 20/20` ;
-    - `isAlive()` et `takeDamage(amount)`, les PV ne descendant jamais en dessous de 0 ;
-    - `attack(target)` : le dresseur donne un coup de poing à la cible, qui inflige 5 dégâts.
+   - `name` et `maxHp` publics en lecture seule, et `hp` public. Un simple attribut suffit : `readonly hp` dans l'interface signifie seulement que l'utilisateur d'un `Fighter` peut **lire** `hp`, la classe reste libre de le modifier ;
+   - constructeur `public constructor(name: string, maxHp: number)` ;
+   - `describe()` retourne `Trainer Ash - HP: 20/20` ;
+   - `isAlive()` et `takeDamage(amount)`, les PV ne descendant jamais en dessous de 0 ;
+   - `attack(target)` : le dresseur donne un coup de poing à la cible, qui inflige 5 dégâts.
 
 ```
 Ash punches Pikachu! Pikachu loses 5 HP (30/35).
@@ -697,7 +728,7 @@ duel(pikachu, punchingBag);
 
 ---
 
-## Exercice 5 : Prendre du recul
+## Exercice 6 : Prendre du recul
 
 <details>
 <summary><strong>Cours : héritage, composition ou données ?</strong></summary>
@@ -768,10 +799,11 @@ Répondre par écrit, en quelques lignes, aux questions suivantes.
 ### Instructions
 
 1. Créer un fichier `src/Team.ts` avec une classe `Team<T extends Fighter>` qui contient un attribut privé `_members: T[]` et les méthodes :
-    - `public add(member: T): void` ;
-    - `public getAlive(): T[]`, qui retourne les membres encore en vie ;
-    - `public getLeader(): T | undefined`, qui retourne le premier membre en vie.
+   - `public add(member: T): void` ;
+   - `public getAlive(): T[]`, qui retourne les membres encore en vie ;
+   - `public getLeader(): T | undefined`, qui retourne le premier membre en vie.
 
 2. Créer une `Team<Pokemon>`, y ajouter `pikachu` et `charmander`, puis vérifier que `team.getLeader()?.type` est accepté : TypeScript sait que le leader est un `Pokemon`, alors que `type` n'existe pas sur `Fighter`.
 
 3. Tenter d'ajouter `ash` à cette équipe, puis de créer une `Team<string>`. Expliquer les deux erreurs.
+

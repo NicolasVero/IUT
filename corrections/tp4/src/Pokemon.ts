@@ -22,7 +22,7 @@ export class Pokemon {
   }
 
   public set hp(value: number) {
-    this._hp = Math.min(Math.max(value, 0), this.maxHp);
+    this._hp = Math.max(0, Math.min(value, this.maxHp));
   }
 
   public describe(): string {
@@ -47,7 +47,7 @@ export class Pokemon {
 
   public learnSkill(skill: Skill): void {
     if (this._skills.length >= Pokemon.MAX_SKILLS) {
-      throw new Error(`${this.name} cannot learn more than ${Pokemon.MAX_SKILLS} skills.`);
+      throw new Error(`${this.name} already knows ${Pokemon.MAX_SKILLS} skills.`);
     }
 
     this._skills.push(skill);
@@ -89,7 +89,6 @@ export class Pokemon {
 
     while (a.isAlive() && b.isAlive()) {
       console.log(`--- Round ${round} ---`);
-
       a.useSkill(a.getStrongestSkill().name, b);
 
       if (b.isAlive()) {
